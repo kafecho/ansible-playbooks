@@ -5,6 +5,9 @@
   #- name: enable the Cloudant repository
   #  copy: src=cloudant.repo dest=/etc/yum.repos.d/cloudant.repo
 
+  - name: Downloading and enable the EPEL repository definitions.
+    action: command rpm -Uvh --replacepkgs http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm 
+
   - name: disable the firewall for now.
     service: name=iptables state=stopped
 
@@ -19,5 +22,14 @@
     lineinfile: dest=/etc/hosts regexp='^${hostvars.${item}.ansible_eth1.ipv4.address}' state=present line='${hostvars.${item}.ansible_eth1.ipv4.address} ${hostvars.${item}.bar}' insertafter=EOF
     with_items: '{{groups.all}}'
 
-  #- name: install BigCouch
-  #  yum: name=bigcouch state=installed
+  - name: install BigCouch
+    yum: name=bigcouch state=installed
+
+  - name: Install Python httplib2.
+    yum: name=python-httplib2 state=installed
+
+  - name: check that we can ping BigCouch on port 5986
+    uri: url=http://localhost:5986
+
+  - name: check that we can ping the CouchDB server on port 5984
+    uri: url=http://localhost:5984
