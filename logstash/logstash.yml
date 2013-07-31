@@ -1,0 +1,25 @@
+---
+- hosts: logstash
+  sudo: yes
+  tasks:
+  - name: Install OpenJDK7
+    yum: name=java-1.7.0-openjdk state=installed
+    environment:
+     http_proxy: http://192.168.56.1:3128
+
+  - name: Create the directory /opt/logstash
+    file: path=/opt/logstash state=directory
+
+  - name: Download logstash
+    get_url: url=http://logstash.objects.dreamhost.com/release/logstash-1.1.13-flatjar.jar dest=/opt/logstash/logstash-monolithic.jar
+    environment:
+     http_proxy: http://192.168.56.1:3128
+
+  - name: Copy the logstash.conf file to /opt/logstash/
+    copy: src=logstash.conf dest=/opt/logstash/logstash.conf
+
+  - name: Download the logstash.sh init script under /etc/rc.d/init.d/logstash
+    get_url: url=http://cookbook.logstash.net/recipes/using-init/logstash.sh dest=/etc/rc.d/init.d/logstash
+
+  - name: Start logstash using the init script.
+    service: name=logstash state=running
