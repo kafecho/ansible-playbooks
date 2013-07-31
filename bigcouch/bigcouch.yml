@@ -1,31 +1,37 @@
 ---
 - hosts: bigcouchservers
   sudo : yes
+  vars:
+   secret: clusterthis
   tasks:
   #- name: enable the Cloudant repository
   #  copy: src=cloudant.repo dest=/etc/yum.repos.d/cloudant.repo
 
-  - name: Downloading and enable the EPEL repository definitions.
+  - name: download and enable the EPEL repository definitions
     action: command rpm -Uvh --replacepkgs http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm 
 
-  - name: disable the firewall for now.
+  - name: disable the firewall for now
     service: name=iptables state=stopped
 
-  #- name: add an entry in /etc/hosts to associate 127.0.0.1 with $hostname
-  #  lineinfile: dest=/etc/hosts regexp='^127\.0\.0\.1\s${hostvars.${item}.bar}' insertafter=EOF line='127.0.0.1 ${hostvars.${item}.bar}'
-
-  - name: print the hostname
-    debug: msg="ipaddress is ${hostvars.${item}.ansible_eth1.ipv4.address}, bar is ${hostvars.${item}.bar}"
-    with_items: '{{groups.bigcouchservers}}'
-
-  - name: add entries in /etc/hosts to associate the hosts IP addresses with their hostnames.
+  - name: print the ip address
+    debug: msg="ipaddress is ${ansible_eth1.ipv4.address}"
+    
+  - name: add entries in /etc/hosts to associate the hosts IP addresses with their hostnames
     lineinfile: dest=/etc/hosts regexp='^${hostvars.${item}.ansible_eth1.ipv4.address}' state=present line='${hostvars.${item}.ansible_eth1.ipv4.address} ${hostvars.${item}.bar}' insertafter=EOF
-    with_items: '{{groups.all}}'
+    with_items: '{{groups.bigcouchservers}}'
 
   - name: install BigCouch
     yum: name=bigcouch state=installed
 
-  - name: Install Python httplib2.
+  - name: modify the BigCouch configuration files
+    template: src={{item}} dest=/opt/bigcouch/etc/{{item}}
+    with_items:
+    - vm.args
+    - default.ini
+    notify:
+    - restart bigcouch 
+
+  - name: install Python httplib2
     yum: name=python-httplib2 state=installed
 
   - name: check that we can ping BigCouch on port 5986
@@ -33,3 +39,13 @@
 
   - name: check that we can ping the CouchDB server on port 5984
     uri: url=http://localhost:5984
+
+  - name: add nodes to the cluster
+    uri: url=http://localhost:5986/nodes/${hostvars.${item}.bar} method=PUT body="{}" status_code=201
+    ignore_errors: yes
+    with_items: '{{groups.bigcouchservers}}'
+    
+  handlers:
+  - name: restart bigcouch
+    service: name=bigcouch state=restarted
+   
