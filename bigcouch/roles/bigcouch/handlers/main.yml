@@ -1,0 +1,4 @@
+---
+# Handlers for bigcouch
+- name: restart bigcouch
+  service: name=bigcouch state=restarted

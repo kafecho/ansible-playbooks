@@ -1,0 +1,8 @@
+---
+- hosts: bigcouchservers
+  sudo: yes
+  vars:
+   #Used to configure the Erlang cluster.
+   secret: clusterthis  
+  roles:
+  - bigcouch

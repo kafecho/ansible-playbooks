@@ -15,11 +15,16 @@ I am also using the nodes' IP addresses instead of their fully qualified hostnam
 
 How to use
 ----------
-In order to use, simply add hosts to your inventory file under the tag 'bigcouchservers'
+In order to use, modify the hosts file and add entries under the tag 'bigcouchservers'
 
 Stuff to do
-----------
-This is work in progress, and I need to tidy the code a bit to be more in line with Ansible best practices. 
+-----------
+This is work in progress. 
+
+Changelog
+---------
+01/08/2013: refactored according to Ansible best practices (added a dedicated role for bigcouch).
+31/07/2013: initial version commit
 
 
 

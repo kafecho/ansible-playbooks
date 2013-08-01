@@ -1,9 +1,4 @@
 ---
-- hosts: bigcouchservers
-  sudo : yes
-  vars:
-   secret: clusterthis
-  tasks:
   - name: enable the Cloudant YUM repository
     copy: src=cloudant.repo dest=/etc/yum.repos.d/cloudant.repo
 
@@ -16,23 +11,18 @@
   - name: disable the firewall for now
     service: name=iptables state=stopped
 
-  #- name: print the ip address
-  #  debug: msg="ipaddress is ${ansible_eth1.ipv4.address}"
-    
-  #- name: add entries in /etc/hosts to associate the hosts IP addresses with their hostnames
-  #  lineinfile: dest=/etc/hosts regexp='^${hostvars.${item}.ansible_eth1.ipv4.address}' state=present line='${hostvars.${item}.ansible_eth1.ipv4.address} ${hostvars.${item}.bar}' insertafter=EOF
-  #  with_items: '{{groups.bigcouchservers}}'
-
   - name: install BigCouch
     yum: name=bigcouch state=installed
 
-  - name: modify the BigCouch configuration files
-    template: src={{item}} dest=/opt/bigcouch/etc/{{item}}
-    with_items:
-    - vm.args
-    - default.ini
+  - name: replace the BigCouch default.ini file
+    file: src=default.ini dest=/opt/bigcouch/etc/default.ini
     notify:
     - restart bigcouch 
+
+  - name: modify the Erlang vm.args
+    template: src=vm.args.j2 dest=/opt/bigcouch/etc/vm.args
+    notify:
+    - restart bigcouch
 
   - name: check that we can ping BigCouch on port 5986
     uri: url=http://localhost:5986
@@ -46,8 +36,3 @@
     with_items: '{{groups.bigcouchservers}}'
 
   - debug: msg="Head over to http://${ansible_eth1.ipv4.address}:5984/_utils to launch the Futon UI. You can use it to test that replication is working."
-  
-  handlers:
-  - name: restart bigcouch
-    service: name=bigcouch state=restarted
-   
