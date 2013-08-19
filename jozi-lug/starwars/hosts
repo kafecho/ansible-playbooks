@@ -1,0 +1,11 @@
+#DarthVader has two kids.
+[jedis]
+192.168.56.101 name=Luke
+192.168.56.102 name=Leia
+
+#Another groups for the rebels
+[rebels]
+192.168.56.101 name=Luke
+192.168.56.102 name=Leia
+192.168.56.103 
+
